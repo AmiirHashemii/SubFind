@@ -10,11 +10,12 @@ HTTP Probing: Checks the status of subdomains with **httpx**.
 Output File: Saves all discovered subdomains to **subdomains.txt**.  
 
 
+# Installation
+```
+git clone https://github.com/AmiirHashemii/SubFind
+```
+
 # Usage
 ```
 ./SubFind [Example.com]
 ```
-
-# Installation
-```
-
