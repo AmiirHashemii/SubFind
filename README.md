@@ -17,5 +17,5 @@ git clone https://github.com/AmiirHashemii/SubFind
 
 # Usage
 ```
-./SubFind [Example.com]
+./SubFind <Domain> <Options>
 ```
