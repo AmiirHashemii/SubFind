@@ -1,5 +1,5 @@
 #!/bin/bash
-amira
+saved
 # Check if the domain is provided
 if [ -z "$1" ]; then
   echo -e "\033[0;31m[!] Error: No domain provided.\033[0m"
