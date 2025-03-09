@@ -1,41 +1,69 @@
 #!/bin/bash
-saved
+
 # Check if the domain is provided
 if [ -z "$1" ]; then
   echo -e "\033[0;31m[!] Error: No domain provided.\033[0m"
-  echo "Usage: ./subdomain_finder.sh <domain>"
+  echo "Usage: ./subdomain_finder.sh <domain> [-r tool1 tool2 ...]"
   exit 1
 fi
 
 domain="$1"
-output_file="subfinder.txt"
+output_file="SubDomains.txt"
+shift  # Remove domain from arguments
+
+# Parse -r flag and skipped tools
+skip_tools=()
+if [[ "$1" == "-r" ]]; then
+  shift  # Remove -r flag
+  while [[ -n "$1" ]]; do
+    skip_tools+=("$1")
+    shift
+  done
+  echo -e "\033[0;33m[!] Skipping: ${skip_tools[*]}\033[0m"
+fi
+
+# Function to check if a tool is in the skip list
+should_skip() {
+  local tool="$1"
+  for skipped in "${skip_tools[@]}"; do
+    if [[ "$skipped" == "$tool" ]]; then
+      return 0  # Return true if the tool is in the skip list
+    fi
+  done
+  return 1  # Return false if the tool is not in the skip list
+}
 
 # Start the process
 echo -e "\033[0;32m[+] Finding subdomains for: \033[0;31m$domain\033[0m"
 
-
 # Run subfinder
-echo -e "\033[0;32m[+] Running subfinder...\033[0m"
-subfinder -d "$domain" 1> "$output_file" 2>/dev/null
-if [ $? -ne 0 ]; then
-  echo -e "\033[0;31m[!] Error: subfinder failed.\033[0m"
-  exit 1
+if ! should_skip "subfinder"; then
+  echo -e "\033[0;32m[+] Running subfinder...\033[0m"
+  subfinder -d "$domain" 1> "$output_file" 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo -e "\033[0;31m[!] Error: subfinder failed.\033[0m"
+    exit 1
+  fi
 fi
 
 # Run amass
-echo -e "\033[0;32m[+] Running amass...\033[0m"
-amass enum -passive -d "$domain" 1>> "$output_file" 2>/dev/null
-if [ $? -ne 0 ]; then
-  echo -e "\033[0;31m[!] Error: amass failed.\033[0m"
-  exit 1
+if ! should_skip "amass"; then
+  echo -e "\033[0;32m[+] Running amass...\033[0m"
+  amass enum -passive -d "$domain" 1>> "$output_file" 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo -e "\033[0;31m[!] Error: amass failed.\033[0m"
+    exit 1
+  fi
 fi
 
 # Run assetfinder
-echo -e "\033[0;32m[+] Running assetfinder...\033[0m"
-assetfinder --subs-only "$domain" 1>> "$output_file" 2>/dev/null
-if [ $? -ne 0 ]; then
-  echo -e "\033[0;31m[!] Error: assetfinder failed.\033[0m"
-  exit 1
+if ! should_skip "assetfinder"; then
+  echo -e "\033[0;32m[+] Running assetfinder...\033[0m"
+  assetfinder --subs-only "$domain" 1>> "$output_file" 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo -e "\033[0;31m[!] Error: assetfinder failed.\033[0m"
+    exit 1
+  fi
 fi
 
 # Sort and remove duplicates
@@ -56,5 +84,3 @@ fi
 
 # Final message
 echo -e "\033[0;32m[+] Alive domains saved to: \033[0;31m$output_file\033[0m"
-
-
